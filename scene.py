@@ -107,7 +107,7 @@ class Camera:
 
 class Scene:
     def __init__(self, voxel_edges=0.06, exposure=3):
-        ti.init(arch=ti.vulkan)
+        ti.init(arch=ti.cuda)
         print(HELP_MSG)
         self.window = ti.ui.Window("Taichi Voxel Renderer",
                                    SCREEN_RES,
@@ -143,7 +143,7 @@ class Scene:
         self.renderer.floor_height[None] = height
         self.renderer.floor_color[None] = color
 
-    def set_direction_light(self, direction, direction_noise, color):
+    def set_directional_light(self, direction, direction_noise, color):
         self.renderer.set_directional_light(direction, direction_noise, color)
 
     def set_background_color(self, color):
@@ -170,13 +170,14 @@ class Scene:
                 self.renderer.accumulate()
             img = self.renderer.fetch_image()
             if self.window.is_pressed('p'):
-                timestamp = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+                timestamp = datetime.today().strftime('%Y-%m-%d-%H%M%S')
                 fname = f"sceenshot{timestamp}.jpg"
                 ti.tools.image.imwrite(img, fname)
             canvas.set_image(img)
             elapsed_time = time.time() - t
             if elapsed_time * TARGET_FPS > 1:
-                spp = max(spp - 1, 1)
+                spp = int(spp / (elapsed_time * TARGET_FPS) - 1)
+                spp = max(spp, 1)
             else:
                 spp += 1
             self.window.show()
